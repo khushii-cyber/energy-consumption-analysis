@@ -1,0 +1,473 @@
+# Load necessary libraries
+library(shiny)
+library(ggplot2)
+library(readxl)
+library(dplyr)
+library(bslib)
+library(plotly)
+library(shinydashboard)
+
+# Landing Page UI
+landing_page <- function() {
+  fluidPage(
+    theme = custom_theme,
+    tags$head(
+      tags$style(HTML("
+        .landing-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          background: linear-gradient(135deg, #f6f8f9 0%, #e5ebee 100%);
+        }
+        .landing-content {
+          text-align: center;
+          max-width: 1200px;
+          padding: 200px;
+          background-color: white;
+          border-radius: 15px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .landing-title {
+          color: #2c3e50;
+          font-weight: bold;
+          margin-bottom: 20px;
+        }
+        .landing-description {
+          color: #7f8c8d;
+          margin-bottom: 30px;
+        }
+        .get-started-btn {
+          padding: 12px 30px;
+          font-size: 18px;
+          border-radius: 50px;
+          transition: all 0.3s ease;
+        }
+        .get-started-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .feature-icons {
+          display: flex;
+          justify-content: center;
+          margin-top: 30px;
+        }
+        .feature-item {
+          margin: 0 20px;
+          text-align: center;
+          color: #3498db;
+        }
+      "))
+    ),
+    div(class = "landing-container",
+        div(class = "landing-content",
+            h1(class = "landing-title", "ECA Data Explorer"),
+            p(class = "landing-description", 
+              "A comprehensive platform for analyzing Energy Consumption datasets. 
+              Explore global trends, perform advanced statistical analysis, and generate predictive insights 
+              to support Energy Consumption research and policy-making."),
+            
+            # Enhanced feature highlights
+            div(class = "feature-icons",
+                div(class = "feature-item",
+                    tags$i(class = "fas fa-chart-line fa-3x"),
+                    p("Advanced Data Visualization"),
+                    tags$small("Interactive charts and graphs")
+                ),
+                div(class = "feature-item",
+                    tags$i(class = "fas fa-filter fa-3x"),
+                    p("Flexible Data Exploration"),
+                    tags$small("Filter by year, country, and variables")
+                ),
+                div(class = "feature-item",
+                    tags$i(class = "fas fa-brain fa-3x"),
+                    p("Predictive Modeling"),
+                    tags$small("Machine learning predictions")
+                ),
+                div(class = "feature-item",
+                    tags$i(class = "fas fa-chart-pie fa-3x"),
+                    p("Comprehensive Analytics"),
+                    tags$small("Summary statistics and insights")
+                )
+            ),
+            
+            actionButton("start_app", "Explore Data", 
+                         class = "btn btn-primary btn-lg get-started-btn mt-4", 
+                         icon = icon("rocket"))
+        )
+    )
+  )
+}
+
+# Main App UI
+main_app_ui <- function() {
+  page_fluid(
+    theme = custom_theme,
+    
+    # Enhanced Custom CSS for styling
+    tags$head(
+      tags$style(HTML("
+        /* Navigation Styling */
+        .nav-pills .nav-link {
+          color: #2c3e50;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          margin: 0 10px;
+          border-radius: 20px;
+          padding: 10px 15px;
+        }
+        
+        .nav-pills .nav-link:hover {
+          background-color: #3498db;
+          color: white;
+          transform: scale(1.05);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .nav-pills .nav-link.active {
+          background-color: #3498db !important;
+          color: white !important;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* Card Styling */
+        .card {
+          margin-bottom: 20px;
+          box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+          border-radius: 10px;
+          transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+        
+        /* Page Header Styling */
+        .page-header {
+          background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+          color: white;
+          padding: 25px;
+          margin-bottom: 20px;
+          border-radius: 10px;
+          box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .page-header h1 {
+          color: white;
+          font-weight: bold;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .page-header p {
+          color: rgba(255,255,255,0.8);
+        }
+        
+        /* Logout Button */
+        .logout-btn {
+          background-color: #e74c3c;
+          color: white;
+          border: none;
+          border-radius: 50px;
+          padding: 10px 15px;
+          transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+          background-color: #c0392b;
+          transform: scale(1.05);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+          .nav-pills .nav-link {
+            margin: 5px 0;
+            padding: 8px 12px;
+          }
+        }
+      "))
+    ),
+    # Navigation
+    # Home Tab
+    navset_card_pill(
+    nav_panel("Home", 
+              fluidRow(
+                box(
+                  width = 20,
+                  status = "info",
+                  solidHeader = TRUE,
+                  
+                  h2("Welcome to ECA Data Explorer", align = "center"),
+                  h3("K Features of this Website:"),
+                  tags$ul(
+                    tags$li("Real-time data filtering and visualization capabilities"),
+                    tags$li("Advanced statistical analysis and trend identification"),
+                    tags$li("Predictive modeling using machine learning algorithms"),
+                    tags$li("Comparative analysis across different countries and time periods"),
+                    tags$li("Interactive charts and customizable visualizations")
+                  ),
+                  h4("U The navigation menu to explore different aspects of the energy consumption data.")
+                )
+              ),
+              fluidRow(
+                valueBoxOutput("total_countries", width = 3),
+                valueBoxOutput("year_range", width = 3),
+                valueBoxOutput("avg_consumption", width = 3),
+                valueBoxOutput("total_records", width = 3)
+              ),
+              fluidRow(
+                box(
+                  width = 12,
+                  status = "primary",
+                  solidHeader = TRUE,
+                  title = "3D Energy Consumption Visualization",
+                  fluidRow(
+                    column(4,
+                           selectInput("x_var", "X Variable:", choices = NULL),
+                           selectInput("y_var", "Y Variable:", choices = NULL),
+                           selectInput("z_var", "Z Variable:", choices = NULL),
+                           sliderInput("point_size", "Point Size:", 
+                                       min = 1, max = 10, value = 3),
+                           sliderInput("opacity", "Point Opacity:", 
+                                       min = 0.1, max = 1, value = 0.7, step = 0.1)
+                    ),
+                    column(8,
+                           plotlyOutput("scatter_3d", height = "600px")
+                    )
+                  )
+                )
+              )
+    ),
+    
+    # Upload Data Tab
+    nav_panel("Upload Data", 
+              fluidRow(
+                box(
+                  title = "Upload Data File",
+                  status = "primary",
+                  solidHeader = TRUE,
+                  width = 12,
+                  fileInput("file", "Choose Excel/CSV File",
+                            multiple = FALSE,
+                            accept = c(".xlsx", ".xls", ".csv")),
+                  radioButtons("file_type", "File Type",
+                               choices = c("Excel" = "excel", "CSV" = "csv"),
+                               selected = "excel"),
+                  conditionalPanel(
+                    condition = "input.file_type == 'csv'",
+                    checkboxInput("header", "Header", TRUE),
+                    radioButtons("sep", "Separator",
+                                 choices = c(Comma = ",", 
+                                             Semicolon = ";", 
+                                             Tab = "\t"),
+                                 selected = ",")
+                  ),
+                  actionButton("load_data", "Load Data", 
+                               class = "btn btn-primary"),
+                  br(), br(),
+                  textOutput("upload_status"),
+                  DTOutput("preview_data")
+                )
+              )
+    ),
+    
+    
+    # Data Visualizations Tab
+    nav_panel("Data Visualizations",
+              fluidRow(
+                box(title = "Visualization Controls", width = 4, status = "primary", solidHeader = TRUE,
+                    selectInput("var_x", "X-axis Variable:", choices = NULL),
+                    selectInput("var_y", "Y-axis Variable:", choices = NULL),
+                    selectInput("chart_type", "Chart Type:",
+                                choices = c("Scatter Plot", "Bar Chart", "Line Chart", "Box Plot", "Heat Map"),
+                                selected = "Scatter Plot"),
+                    conditionalPanel(
+                      condition = "input.chart_type == 'Scatter Plot'",
+                      checkboxInput("show_trend", "Show Trend Line", TRUE),
+                      selectInput("trend_method", "Trend Line Type:",
+                                  choices = c("Linear" = "lm", "Loess" = "loess"),
+                                  selected = "lm")
+                    ),
+                    selectInput("color_scheme", "Color Scheme:",
+                                choices = c("Default", "Viridis", "Magma", "Plasma"),
+                                selected = "Default"),
+                    checkboxInput("log_scale", "Use Log Scale for Y-axis", FALSE),
+                    downloadButton("download_plot", "Download Plot", 
+                                   class = "btn btn-info btn-block")
+                ),
+                box(title = "Visualization", width = 8, status = "info", solidHeader = TRUE,
+                    plotlyOutput("dynamic_plot", height = "600px")
+                )
+              )
+    ),
+}
+
+# Server Logic
+server <- function(input, output, session) {
+  # Initialize user database on first run
+  init_user_db()
+  rv <- reactiveValues(data = NULL)
+  
+  # File upload and data loading
+  observeEvent(input$load_data, {
+    req(input$file)
+    
+    withProgress(message = 'Loading data...', value = 0, {
+      tryCatch({
+        if (input$file_type == "excel") {
+          rv$data <- read_excel(input$file$datapath)
+        } else {
+          rv$data <- read.csv(input$file$datapath,
+                              header = input$header,
+                              sep = input$sep)
+        }
+        
+        # Update UI elements that depend on the data
+        updateSelectizeInput(session, "country",
+                             choices = unique(rv$data$country),
+                             selected = unique(rv$data$country)[1:5])
+        
+        # Update other input choices based on column names
+        updateSelectInput(session, "sort_by",
+                          choices = names(rv$data))
+        
+        updateSelectInput(session, "var_x",
+                          choices = names(rv$data))
+        
+        updateSelectInput(session, "var_y",
+                          choices = names(rv$data))
+        
+        updateSelectInput(session, "target_var",
+                          choices = names(select_if(rv$data, is.numeric)))
+        
+        updateCheckboxGroupInput(session, "pred_vars",
+                                 choices = names(select_if(rv$data, is.numeric)))
+        
+        # Update range inputs
+        if ("year" %in% names(rv$data)) {
+          updateSliderInput(session, "year",
+                            min = min(rv$data$year, na.rm = TRUE),
+                            max = max(rv$data$year, na.rm = TRUE),
+                            value = c(min(rv$data$year, na.rm = TRUE),
+                                      max(rv$data$year, na.rm = TRUE)))
+        }
+        
+        if ("biofuel_consumption" %in% names(rv$data)) {
+          updateSliderInput(session, "consumption_range",
+                            min = min(rv$data$biofuel_consumption, na.rm = TRUE),
+                            max = max(rv$data$biofuel_consumption, na.rm = TRUE),
+                            value = c(min(rv$data$biofuel_consumption, na.rm = TRUE),
+                                      max(rv$data$biofuel_consumption, na.rm = TRUE)))
+        }
+        
+      }, error = function(e) {
+        showNotification(
+          paste("Error loading file:", e$message),
+          type = "error"
+        )
+      })
+    })
+  })
+  
+  
+  # Render 3D scatter plot
+  output$scatter_3d <- renderPlotly({
+    req(rv$data, input$x_var, input$y_var, input$z_var)
+    
+    plot_ly(data = rv$data,
+            x = as.formula(paste0("~", input$x_var)),
+            y = as.formula(paste0("~", input$y_var)),
+            z = as.formula(paste0("~", input$z_var)),
+            type = "scatter3d",
+            mode = "markers",
+            marker = list(
+              size = input$point_size,
+              opacity = input$opacity,
+              color = ~country,
+              colorscale = 'Viridis'
+            ),
+            hoverinfo = "text",
+            text = ~paste(
+              "Country:", country,
+              "<br>", input$x_var, ":", get(input$x_var),
+              "<br>", input$y_var, ":", get(input$y_var),
+              "<br>", input$z_var, ":", get(input$z_var)
+            )
+    ) %>%
+      layout(
+        scene = list(
+          xaxis = list(title = input$x_var),
+          yaxis = list(title = input$y_var),
+          zaxis = list(title = input$z_var)
+        ),
+        title = "3D Energy Consumption Analysis",
+        showlegend = TRUE
+      )
+  })
+  # Reset filters
+  observeEvent(input$reset, {
+    updateSliderInput(session, "year",
+                      value = c(min(data$year, na.rm = TRUE),
+                                max(data$year, na.rm = TRUE)))
+    updateSelectizeInput(session, "country",
+                         selected = unique(data$country)[1:5])
+    updateSliderInput(session, "consumption_range",
+                      value = c(min(data$biofuel_consumption, na.rm = TRUE),
+                                max(data$biofuel_consumption, na.rm = TRUE)))
+  })
+  
+  # Dynamic visualization
+  output$dynamic_plot <- renderPlotly({
+    req(input$var_x, input$var_y)
+    plot_data <- filtered_data()
+    
+    p <- ggplot(plot_data, aes_string(x = input$var_x, y = input$var_y, color = "country")) +
+      theme_minimal() +
+      labs(x = input$var_x, y = input$var_y)
+    
+    # Apply color scheme
+    if (input$color_scheme != "Default") {
+      p <- p + scale_color_viridis_d(option = tolower(input$color_scheme))
+    }
+    
+    # Apply log scale if selected
+    if (input$log_scale) {
+      p <- p + scale_y_log10()
+    }
+    
+    # Apply chart type
+    switch(input$chart_type,
+           "Scatter Plot" = {
+             p <- p + geom_point(alpha = 0.7)
+             if (input$show_trend) {
+               p <- p + geom_smooth(method = input$trend_method, se = FALSE)
+             }
+           },
+           "Bar Chart" = {
+             p <- p + geom_bar(stat = "identity", position = "dodge")
+           },
+           "Line Chart" = {
+             p <- p + geom_line() + geom_point()
+           },
+           "Box Plot" = {
+             p <- p + geom_boxplot()
+           },
+           "Heat Map" = {
+             p <- ggplot(plot_data, aes_string(x = input$var_x, y = "country", fill = input$var_y)) +
+               geom_tile() +
+               scale_fill_viridis_c() +
+               theme_minimal()
+           }
+    )
+    
+    ggplotly(p) %>%
+      layout(
+        margin = list(l = 50, r = 50, b = 50, t = 50),
+        showlegend = TRUE
+      )
+  })
+    
+
+# Run the app
+shinyApp(ui = ui, server = server)
