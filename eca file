@@ -6,6 +6,21 @@ library(dplyr)
 library(bslib)
 library(plotly)
 library(shinydashboard)
+library(DT)
+
+# Create custom theme
+custom_theme <- bs_theme(
+  bootswatch = "flatly",
+  primary = "#3498db",
+  secondary = "#2c3e50"
+)
+
+# Function to initialize user database
+init_user_db <- function() {
+  # Placeholder for user authentication
+  # In a real app, you would implement proper authentication
+  return(TRUE)
+}
 
 # Landing Page UI
 landing_page <- function() {
@@ -101,7 +116,7 @@ landing_page <- function() {
 
 # Main App UI
 main_app_ui <- function() {
-  page_fluid(
+  fluidPage(
     theme = custom_theme,
     
     # Enhanced Custom CSS for styling
@@ -189,125 +204,151 @@ main_app_ui <- function() {
       "))
     ),
     # Navigation
-    # Home Tab
     navset_card_pill(
-    nav_panel("Home", 
-              fluidRow(
-                box(
-                  width = 20,
-                  status = "info",
-                  solidHeader = TRUE,
-                  
-                  h2("Welcome to ECA Data Explorer", align = "center"),
-                  h3("K Features of this Website:"),
-                  tags$ul(
-                    tags$li("Real-time data filtering and visualization capabilities"),
-                    tags$li("Advanced statistical analysis and trend identification"),
-                    tags$li("Predictive modeling using machine learning algorithms"),
-                    tags$li("Comparative analysis across different countries and time periods"),
-                    tags$li("Interactive charts and customizable visualizations")
-                  ),
-                  h4("U The navigation menu to explore different aspects of the energy consumption data.")
-                )
-              ),
-              fluidRow(
-                valueBoxOutput("total_countries", width = 3),
-                valueBoxOutput("year_range", width = 3),
-                valueBoxOutput("avg_consumption", width = 3),
-                valueBoxOutput("total_records", width = 3)
-              ),
-              fluidRow(
-                box(
-                  width = 12,
-                  status = "primary",
-                  solidHeader = TRUE,
-                  title = "3D Energy Consumption Visualization",
-                  fluidRow(
-                    column(4,
-                           selectInput("x_var", "X Variable:", choices = NULL),
-                           selectInput("y_var", "Y Variable:", choices = NULL),
-                           selectInput("z_var", "Z Variable:", choices = NULL),
-                           sliderInput("point_size", "Point Size:", 
-                                       min = 1, max = 10, value = 3),
-                           sliderInput("opacity", "Point Opacity:", 
-                                       min = 0.1, max = 1, value = 0.7, step = 0.1)
+      # Home Tab
+      nav_panel("Home", 
+                fluidRow(
+                  box(
+                    width = 12,
+                    status = "info",
+                    solidHeader = TRUE,
+                    
+                    h2("Welcome to ECA Data Explorer", align = "center"),
+                    h3("Key Features of this Website:"),
+                    tags$ul(
+                      tags$li("Real-time data filtering and visualization capabilities"),
+                      tags$li("Advanced statistical analysis and trend identification"),
+                      tags$li("Predictive modeling using machine learning algorithms"),
+                      tags$li("Comparative analysis across different countries and time periods"),
+                      tags$li("Interactive charts and customizable visualizations")
                     ),
-                    column(8,
-                           plotlyOutput("scatter_3d", height = "600px")
+                    h4("Use the navigation menu to explore different aspects of the energy consumption data.")
+                  )
+                ),
+                fluidRow(
+                  valueBoxOutput("total_countries", width = 3),
+                  valueBoxOutput("year_range", width = 3),
+                  valueBoxOutput("avg_consumption", width = 3),
+                  valueBoxOutput("total_records", width = 3)
+                ),
+                fluidRow(
+                  box(
+                    width = 12,
+                    status = "primary",
+                    solidHeader = TRUE,
+                    title = "3D Energy Consumption Visualization",
+                    fluidRow(
+                      column(4,
+                             selectInput("x_var", "X Variable:", choices = NULL),
+                             selectInput("y_var", "Y Variable:", choices = NULL),
+                             selectInput("z_var", "Z Variable:", choices = NULL),
+                             sliderInput("point_size", "Point Size:", 
+                                         min = 1, max = 10, value = 3),
+                             sliderInput("opacity", "Point Opacity:", 
+                                         min = 0.1, max = 1, value = 0.7, step = 0.1)
+                      ),
+                      column(8,
+                             plotlyOutput("scatter_3d", height = "600px")
+                      )
                     )
                   )
                 )
-              )
-    ),
-    
-    # Upload Data Tab
-    nav_panel("Upload Data", 
-              fluidRow(
-                box(
-                  title = "Upload Data File",
-                  status = "primary",
-                  solidHeader = TRUE,
-                  width = 12,
-                  fileInput("file", "Choose Excel/CSV File",
-                            multiple = FALSE,
-                            accept = c(".xlsx", ".xls", ".csv")),
-                  radioButtons("file_type", "File Type",
-                               choices = c("Excel" = "excel", "CSV" = "csv"),
-                               selected = "excel"),
-                  conditionalPanel(
-                    condition = "input.file_type == 'csv'",
-                    checkboxInput("header", "Header", TRUE),
-                    radioButtons("sep", "Separator",
-                                 choices = c(Comma = ",", 
-                                             Semicolon = ";", 
-                                             Tab = "\t"),
-                                 selected = ",")
-                  ),
-                  actionButton("load_data", "Load Data", 
-                               class = "btn btn-primary"),
-                  br(), br(),
-                  textOutput("upload_status"),
-                  DTOutput("preview_data")
-                )
-              )
-    ),
-    
-    
-    # Data Visualizations Tab
-    nav_panel("Data Visualizations",
-              fluidRow(
-                box(title = "Visualization Controls", width = 4, status = "primary", solidHeader = TRUE,
-                    selectInput("var_x", "X-axis Variable:", choices = NULL),
-                    selectInput("var_y", "Y-axis Variable:", choices = NULL),
-                    selectInput("chart_type", "Chart Type:",
-                                choices = c("Scatter Plot", "Bar Chart", "Line Chart", "Box Plot", "Heat Map"),
-                                selected = "Scatter Plot"),
+      ),
+      
+      # Upload Data Tab
+      nav_panel("Upload Data", 
+                fluidRow(
+                  box(
+                    title = "Upload Data File",
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width = 12,
+                    fileInput("file", "Choose Excel/CSV File",
+                              multiple = FALSE,
+                              accept = c(".xlsx", ".xls", ".csv")),
+                    radioButtons("file_type", "File Type",
+                                 choices = c("Excel" = "excel", "CSV" = "csv"),
+                                 selected = "excel"),
                     conditionalPanel(
-                      condition = "input.chart_type == 'Scatter Plot'",
-                      checkboxInput("show_trend", "Show Trend Line", TRUE),
-                      selectInput("trend_method", "Trend Line Type:",
-                                  choices = c("Linear" = "lm", "Loess" = "loess"),
-                                  selected = "lm")
+                      condition = "input.file_type == 'csv'",
+                      checkboxInput("header", "Header", TRUE),
+                      radioButtons("sep", "Separator",
+                                   choices = c(Comma = ",", 
+                                               Semicolon = ";", 
+                                               Tab = "\t"),
+                                   selected = ",")
                     ),
-                    selectInput("color_scheme", "Color Scheme:",
-                                choices = c("Default", "Viridis", "Magma", "Plasma"),
-                                selected = "Default"),
-                    checkboxInput("log_scale", "Use Log Scale for Y-axis", FALSE),
-                    downloadButton("download_plot", "Download Plot", 
-                                   class = "btn btn-info btn-block")
-                ),
-                box(title = "Visualization", width = 8, status = "info", solidHeader = TRUE,
-                    plotlyOutput("dynamic_plot", height = "600px")
+                    actionButton("load_data", "Load Data", 
+                                 class = "btn btn-primary"),
+                    br(), br(),
+                    textOutput("upload_status"),
+                    DTOutput("preview_data")
+                  )
                 )
-              )
-    ),
+      ),
+      
+      
+      # Data Visualizations Tab
+      nav_panel("Data Visualizations",
+                fluidRow(
+                  box(title = "Visualization Controls", width = 4, status = "primary", solidHeader = TRUE,
+                      selectInput("var_x", "X-axis Variable:", choices = NULL),
+                      selectInput("var_y", "Y-axis Variable:", choices = NULL),
+                      selectInput("chart_type", "Chart Type:",
+                                  choices = c("Scatter Plot", "Bar Chart", "Line Chart", "Box Plot", "Heat Map"),
+                                  selected = "Scatter Plot"),
+                      conditionalPanel(
+                        condition = "input.chart_type == 'Scatter Plot'",
+                        checkboxInput("show_trend", "Show Trend Line", TRUE),
+                        selectInput("trend_method", "Trend Line Type:",
+                                    choices = c("Linear" = "lm", "Loess" = "loess"),
+                                    selected = "lm")
+                      ),
+                      selectInput("color_scheme", "Color Scheme:",
+                                  choices = c("Default", "Viridis", "Magma", "Plasma"),
+                                  selected = "Default"),
+                      checkboxInput("log_scale", "Use Log Scale for Y-axis", FALSE),
+                      downloadButton("download_plot", "Download Plot", 
+                                     class = "btn btn-info btn-block")
+                  ),
+                  box(title = "Visualization", width = 8, status = "info", solidHeader = TRUE,
+                      plotlyOutput("dynamic_plot", height = "600px")
+                  )
+                )
+      )
+    )
+  )
+}
+
+# Define UI function that switches between landing page and main app
+ui <- function(request) {
+  fluidPage(
+    uiOutput("page_content")
+  )
 }
 
 # Server Logic
 server <- function(input, output, session) {
   # Initialize user database on first run
   init_user_db()
+  
+  # Track app state
+  app_state <- reactiveVal("landing")
   rv <- reactiveValues(data = NULL)
+  
+  # Switch between landing page and main app
+  observeEvent(input$start_app, {
+    app_state("main")
+  })
+  
+  # Render the appropriate page based on state
+  output$page_content <- renderUI({
+    if (app_state() == "landing") {
+      landing_page()
+    } else {
+      main_app_ui()
+    }
+  })
   
   # File upload and data loading
   observeEvent(input$load_data, {
@@ -323,45 +364,39 @@ server <- function(input, output, session) {
                               sep = input$sep)
         }
         
-        # Update UI elements that depend on the data
-        updateSelectizeInput(session, "country",
-                             choices = unique(rv$data$country),
-                             selected = unique(rv$data$country)[1:5])
+        output$upload_status <- renderText({
+          paste("Data loaded successfully with", nrow(rv$data), "rows and", ncol(rv$data), "columns.")
+        })
         
-        # Update other input choices based on column names
-        updateSelectInput(session, "sort_by",
-                          choices = names(rv$data))
+        output$preview_data <- renderDT({
+          datatable(head(rv$data, 100), options = list(scrollX = TRUE))
+        })
+        
+        # Update input choices based on column names
+        updateSelectInput(session, "x_var",
+                          choices = names(rv$data),
+                          selected = names(rv$data)[1])
+        
+        updateSelectInput(session, "y_var",
+                          choices = names(rv$data),
+                          selected = names(rv$data)[2])
+        
+        updateSelectInput(session, "z_var",
+                          choices = names(rv$data),
+                          selected = names(rv$data)[3])
         
         updateSelectInput(session, "var_x",
-                          choices = names(rv$data))
+                          choices = names(rv$data),
+                          selected = names(rv$data)[1])
         
         updateSelectInput(session, "var_y",
-                          choices = names(rv$data))
-        
-        updateSelectInput(session, "target_var",
-                          choices = names(select_if(rv$data, is.numeric)))
-        
-        updateCheckboxGroupInput(session, "pred_vars",
-                                 choices = names(select_if(rv$data, is.numeric)))
-        
-        # Update range inputs
-        if ("year" %in% names(rv$data)) {
-          updateSliderInput(session, "year",
-                            min = min(rv$data$year, na.rm = TRUE),
-                            max = max(rv$data$year, na.rm = TRUE),
-                            value = c(min(rv$data$year, na.rm = TRUE),
-                                      max(rv$data$year, na.rm = TRUE)))
-        }
-        
-        if ("biofuel_consumption" %in% names(rv$data)) {
-          updateSliderInput(session, "consumption_range",
-                            min = min(rv$data$biofuel_consumption, na.rm = TRUE),
-                            max = max(rv$data$biofuel_consumption, na.rm = TRUE),
-                            value = c(min(rv$data$biofuel_consumption, na.rm = TRUE),
-                                      max(rv$data$biofuel_consumption, na.rm = TRUE)))
-        }
+                          choices = names(rv$data),
+                          selected = names(rv$data)[2])
         
       }, error = function(e) {
+        output$upload_status <- renderText({
+          paste("Error loading file:", e$message)
+        })
         showNotification(
           paste("Error loading file:", e$message),
           type = "error"
@@ -370,10 +405,97 @@ server <- function(input, output, session) {
     })
   })
   
+  # Create filtered data reactive expression
+  filtered_data <- reactive({
+    req(rv$data)
+    return(rv$data)
+  })
+  
+  # ValueBox outputs
+  output$total_countries <- renderValueBox({
+    req(rv$data)
+    if ("country" %in% names(rv$data)) {
+      countries_count <- length(unique(rv$data$country))
+      valueBox(
+        countries_count,
+        "Countries",
+        icon = icon("globe"),
+        color = "blue"
+      )
+    } else {
+      valueBox(
+        "N/A",
+        "Countries",
+        icon = icon("globe"),
+        color = "blue"
+      )
+    }
+  })
+  
+  output$year_range <- renderValueBox({
+    req(rv$data)
+    if ("year" %in% names(rv$data)) {
+      year_min <- min(rv$data$year, na.rm = TRUE)
+      year_max <- max(rv$data$year, na.rm = TRUE)
+      valueBox(
+        paste(year_min, "-", year_max),
+        "Year Range",
+        icon = icon("calendar"),
+        color = "green"
+      )
+    } else {
+      valueBox(
+        "N/A",
+        "Year Range",
+        icon = icon("calendar"),
+        color = "green"
+      )
+    }
+  })
+  
+  output$avg_consumption <- renderValueBox({
+    req(rv$data)
+    if ("biofuel_consumption" %in% names(rv$data)) {
+      avg_consumption <- mean(rv$data$biofuel_consumption, na.rm = TRUE)
+      valueBox(
+        round(avg_consumption, 2),
+        "Avg. Consumption",
+        icon = icon("tachometer-alt"),
+        color = "yellow"
+      )
+    } else {
+      valueBox(
+        "N/A",
+        "Avg. Consumption",
+        icon = icon("tachometer-alt"),
+        color = "yellow"
+      )
+    }
+  })
+  
+  output$total_records <- renderValueBox({
+    req(rv$data)
+    valueBox(
+      nrow(rv$data),
+      "Total Records",
+      icon = icon("database"),
+      color = "red"
+    )
+  })
   
   # Render 3D scatter plot
   output$scatter_3d <- renderPlotly({
     req(rv$data, input$x_var, input$y_var, input$z_var)
+    
+    # Ensure the selected variables exist in the data
+    if (!(input$x_var %in% names(rv$data)) || 
+        !(input$y_var %in% names(rv$data)) || 
+        !(input$z_var %in% names(rv$data))) {
+      return(NULL)
+    }
+    
+    # Check if there's a country column for color
+    color_var <- if ("country" %in% names(rv$data)) "country" else NULL
     
     plot_ly(data = rv$data,
             x = as.formula(paste0("~", input$x_var)),
@@ -384,15 +506,16 @@ server <- function(input, output, session) {
             marker = list(
               size = input$point_size,
               opacity = input$opacity,
-              color = ~country,
+              color = if (!is.null(color_var)) ~get(color_var) else NULL,
               colorscale = 'Viridis'
             ),
             hoverinfo = "text",
             text = ~paste(
-              "Country:", country,
-              "<br>", input$x_var, ":", get(input$x_var),
-              "<br>", input$y_var, ":", get(input$y_var),
-              "<br>", input$z_var, ":", get(input$z_var)
+              if (!is.null(color_var)) paste("Country:", get(color_var)) else "",
+              paste(input$x_var, ":", get(input$x_var)),
+              paste(input$y_var, ":", get(input$y_var)),
+              paste(input$z_var, ":", get(input$z_var)),
+              sep = "<br>"
             )
     ) %>%
       layout(
@@ -405,29 +528,29 @@ server <- function(input, output, session) {
         showlegend = TRUE
       )
   })
-  # Reset filters
-  observeEvent(input$reset, {
-    updateSliderInput(session, "year",
-                      value = c(min(data$year, na.rm = TRUE),
-                                max(data$year, na.rm = TRUE)))
-    updateSelectizeInput(session, "country",
-                         selected = unique(data$country)[1:5])
-    updateSliderInput(session, "consumption_range",
-                      value = c(min(data$biofuel_consumption, na.rm = TRUE),
-                                max(data$biofuel_consumption, na.rm = TRUE)))
-  })
   
   # Dynamic visualization
   output$dynamic_plot <- renderPlotly({
-    req(input$var_x, input$var_y)
+    req(rv$data, input$var_x, input$var_y)
+    
+    # Ensure the selected variables exist in the data
+    if (!(input$var_x %in% names(rv$data)) || 
+        !(input$var_y %in% names(rv$data))) {
+      return(NULL)
+    }
+    
     plot_data <- filtered_data()
     
-    p <- ggplot(plot_data, aes_string(x = input$var_x, y = input$var_y, color = "country")) +
+    # Check if there's a country column for color
+    color_var <- if ("country" %in% names(plot_data)) "country" else NULL
+    
+    p <- ggplot(plot_data, aes_string(x = input$var_x, y = input$var_y, 
+                                      color = color_var)) +
       theme_minimal() +
       labs(x = input$var_x, y = input$var_y)
     
     # Apply color scheme
-    if (input$color_scheme != "Default") {
+    if (!is.null(color_var) && input$color_scheme != "Default") {
       p <- p + scale_color_viridis_d(option = tolower(input$color_scheme))
     }
     
@@ -445,19 +568,34 @@ server <- function(input, output, session) {
              }
            },
            "Bar Chart" = {
-             p <- p + geom_bar(stat = "identity", position = "dodge")
+             # For bar charts, we need to ensure the x variable is categorical
+             p <- ggplot(plot_data, aes_string(x = input$var_x, y = input$var_y, 
+                                               fill = color_var)) +
+               geom_bar(stat = "identity", position = "dodge") +
+               theme_minimal()
            },
            "Line Chart" = {
              p <- p + geom_line() + geom_point()
            },
            "Box Plot" = {
-             p <- p + geom_boxplot()
+             p <- ggplot(plot_data, aes_string(x = input$var_x, y = input$var_y)) +
+               geom_boxplot() +
+               theme_minimal()
            },
            "Heat Map" = {
-             p <- ggplot(plot_data, aes_string(x = input$var_x, y = "country", fill = input$var_y)) +
-               geom_tile() +
-               scale_fill_viridis_c() +
-               theme_minimal()
+             # For heat maps, we adapt based on available data
+             if (!is.null(color_var)) {
+               p <- ggplot(plot_data, aes_string(x = input$var_x, y = color_var, fill = input$var_y)) +
+                 geom_tile() +
+                 scale_fill_viridis_c() +
+                 theme_minimal()
+             } else {
+               # If no country column, create a basic heatmap
+               p <- ggplot(plot_data, aes_string(x = input$var_x, y = input$var_y)) +
+                 stat_density_2d(aes(fill = after_stat(density)), geom = "raster", contour = FALSE) +
+                 scale_fill_viridis_c() +
+                 theme_minimal()
+             }
            }
     )
     
@@ -467,7 +605,17 @@ server <- function(input, output, session) {
         showlegend = TRUE
       )
   })
-    
+  
+  # Download handler for plots
+  output$download_plot <- downloadHandler(
+    filename = function() {
+      paste("plot-", Sys.Date(), ".png", sep="")
+    },
+    content = function(file) {
+      ggsave(file, plot = last_plot(), device = "png", width = 10, height = 7, dpi = 300)
+    }
+  )
+}
 
 # Run the app
 shinyApp(ui = ui, server = server)
